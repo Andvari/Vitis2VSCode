@@ -3,11 +3,14 @@ APP_NAME=zynq-with-led-mio-10
 build=Release
 ws=proj
 plat_name=design_1_wrapper
-xsa=/home/nemo/workspace/Zynq/$(APP_NAME)/hw/design_1_wrapper.xsa
+xsa=/home/nemo/workspace/FPGA/Zynq/$(APP_NAME)/hw/design_1_wrapper.xsa
 domain_name_apu=standalone_ps7_cortexa9_0
 sys_name=$(APP_NAME)_system
 
 init:
+	if [ -d "$(ws)/$(APP_NAME)/src" ]; then tar cf src.tar "$(ws)/$(APP_NAME)/src"; fi
+	if [ -d "$(ws)" ]; then rm -f -d -r $(ws); fi
+	if [ -d ".Xil" ]; then rm -f -d -r ".Xil"; fi
 	xsct -eval "setws $(ws); \
 	platform create -name $(plat_name) -hw $(xsa); \
 	domain create -name $(domain_name_apu) -os standalone -proc ps7_cortexa9_0; \
@@ -17,13 +20,19 @@ init:
         app config -name $(APP_NAME) build-config $(build); \
 	app build -all; "
 
+	rm -f -d -r .Xil
+	rm -f -d -r $(ws)/$(sys_name)
+
+	if [ -e src.tar ]; then rm -f -d -r $(ws)/$(APP_NAME)/src; tar xvf src.tar; rm -f src.tar; fi
+
 	echo "#!/bin/sh\n" >$(ws)/run
 	echo "xsct -interactive ./boot.tcl\n" >>$(ws)/run
 
-#       fpga /home/nemo/workspace/ZYHZGW/project_5/project_5.runs/impl_1/test.bit
 
 	cp ./boot.tcl tmp
-	echo "\ndow "$(APP_NAME)"/Release/"$(APP_NAME)".elf\n" >> tmp
+
+	echo "\nfpga "$(plat_name)"/export/"$(plat_name)"/hw/"$(plat_name)".bit\n" >> tmp
+	echo "dow "$(APP_NAME)"/Release/"$(APP_NAME)".elf\n" >> tmp
 	echo "con\n" >> tmp
 	echo "exit\n" >> tmp
 	mv tmp $(ws)/boot.tcl
