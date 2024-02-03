@@ -1,10 +1,11 @@
 
+family=Kintex
 kernel=microblaze
 APP_NAME=microblaze
 build=Release
 ws=proj
 plat_name=design_1_wrapper
-xsa=/home/nemo/workspace/FPGA/Kintex/$(APP_NAME)/hw/design_1_wrapper.xsa
+xsa=/home/nemo/workspace/FPGA/$(family)/$(APP_NAME)/hw/design_1_wrapper.xsa
 domain_name_apu=standalone_$(kernel)_0
 sys_name=$(APP_NAME)_system
 
@@ -24,7 +25,9 @@ init:
 	rm -f -d -r .Xil
 	rm -f -d -r $(ws)/$(sys_name)
 
+	if [ -e $(ws)/$(APP_NAME)/src/lscript.ld ]; then mv $(ws)/$(APP_NAME)/src/lscript.ld .; fi
 	if [ -e src.tar ]; then rm -f -d -r $(ws)/$(APP_NAME)/src; tar xvf src.tar; rm -f src.tar; fi
+	if [ -e lscript.ld ]; then mv lscript.ld $(ws)/$(APP_NAME)/src/lscript.ld; fi
 
 	echo "#!/bin/sh\n" >$(ws)/run
 	echo "xsct -interactive ./boot.tcl\n" >>$(ws)/run
@@ -33,11 +36,6 @@ init:
 	echo "targets -set -filter {jtag_cable_name =~ \"Platform Cable USB II 13724327082d01\" && level==0 && jtag_device_ctx==\"jsn-DLC10-13724327082d01-43651093-0\"}" >>tmp
 	echo "\nfpga -file "$(APP_NAME)"/_ide/bitstream/"$(plat_name)".bit\n" >> tmp
 	echo "\ntargets -set -nocase -filter {name =~ \"*"$(APP_NAME)"*#0\" && bscan==\"USER2\" }" >> tmp
-
-#fpga -file /home/nemo/workspace/FPGA/Kintex/Microblaze/sw/microblaze/_ide/bitstream/download.bit
-#targets -set -nocase -filter {name =~ "*microblaze*#0" && bscan=="USER2" }
-#dow /home/nemo/workspace/FPGA/Kintex/Microblaze/sw/microblaze/Debug/microblaze.elf
-#con
 
 	echo "dow "$(APP_NAME)"/"$(build)"/"$(APP_NAME)".elf\n" >> tmp
 	echo "con\n" >> tmp
